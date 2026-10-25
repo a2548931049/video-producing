@@ -108,7 +108,7 @@ npx hyperframes doctor           # 检查环境缺什么
 
 重新生成配乐：`node tools/make-music.mjs`（showreel）或 `node tools/make-audio.mjs`（pelican-bicycle、norilsk-putorana）。
 
-`norilsk-putorana` 渲染较重（软件 WebGL）：默认每帧 1 个子帧，方便 `check` 和草稿；成片加 `--variables '{"subframes":6}'`（运动模糊 + 抗锯齿），4 核容器里大约 40 分钟。
+`norilsk-putorana` 渲染较重（软件 WebGL）：默认每帧 1 个子帧，方便 `check` 和草稿（4 核容器约 14 分钟）；成片加 `--variables '{"subframes":6}'`（运动模糊 + 抗锯齿），4 核容器里实测 79 分钟。超过一小时的渲染可以加 `HF_SEGMENTED_CAPTURE=true` 和 `--resume`，中断后重跑会接着已完成的分段继续。
 
 ## 备注
 
