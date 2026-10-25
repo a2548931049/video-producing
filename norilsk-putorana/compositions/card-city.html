@@ -27,7 +27,7 @@
     #city-scrim {
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse 980px 560px at 14% 92%, rgba(3, 6, 14, 0.72) 0%, rgba(3, 6, 14, 0.42) 42%, rgba(3, 6, 14, 0) 72%);
+      background: radial-gradient(ellipse 980px 560px at 14% 92%, rgba(3, 6, 14, 0.74) 0%, rgba(3, 6, 14, 0.52) 50%, rgba(3, 6, 14, 0) 80%);
     }
     #city-card {
       position: absolute;
@@ -95,7 +95,7 @@
       // local time: 0 = 0.2 s in the film. In as the street rushes by, out as the camera dives into the archway.
       const tl = gsap.timeline({ paused: true });
       tl.fromTo("#city-scrim", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 0);
-      tl.fromTo("#city-coord", { opacity: 0, x: -14 }, { opacity: 0.85, x: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+      tl.fromTo("#city-coord", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.12);
       tl.fromTo("#city-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power3.inOut" }, 0.17);
       tl.fromTo("#city-title span", { opacity: 0, y: 26, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out", stagger: 0.04 }, 0.22);
       tl.fromTo("#city-sub", { opacity: 0, y: 10 }, { opacity: 0.92, y: 0, duration: 0.5, ease: "power2.out" }, 0.5);
