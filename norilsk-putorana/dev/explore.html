@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>explore</title>
+    <script type="importmap">{ "imports": { "three": "../assets/vendor/three/build/three.module.js" } }</script>
+    <style>html,body{margin:0;background:#000;width:1920px;height:1080px;overflow:hidden}canvas{display:block}</style>
+  </head>
+  <body>
+    <canvas id="gl" width="1920" height="1080"></canvas>
+    <script type="module">
+      // Dev-only terrain scout: window.view({x,y,z,yaw,pitch,fov}) renders one still.
+      // URL params: ex (vertical exaggeration), step (terrace height m), a (bench fraction), sharp (unsharp amount)
+      import * as THREE from "three";
+      const Q = new URLSearchParams(location.search);
+      const EX = +(Q.get("ex") ?? 1), STEP = +(Q.get("step") ?? 0), A = +(Q.get("a") ?? 0.6), SHARP = +(Q.get("sharp") ?? 0);
+      const meta = await (await fetch("../assets/terrain/terrain.json")).json();
+      async function loadHeights(R) {
+        const img = new Image();
+        img.src = "../" + R.file;
+        await img.decode();
+        const c = document.createElement("canvas");
+        c.width = R.nx; c.height = R.nz;
+        const g = c.getContext("2d", { willReadFrequently: true });
+        g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, R.nx, R.nz).data;
+        const h = new Float32Array(R.nx * R.nz);
+        for (let i = 0; i < h.length; i++) h[i] = (d[i * 4] * 256 + d[i * 4 + 1]) / 20 - 100;
+        return h;
+      }
+      function blur(h, nx, nz, r) {
+        const t = new Float32Array(h.length), o = new Float32Array(h.length);
+        for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+          let s = 0, n = 0;
+          for (let k = -r; k <= r; k++) { const ii = Math.min(nx - 1, Math.max(0, i + k)); s += h[j * nx + ii]; n++; }
+          t[j * nx + i] = s / n;
+        }
+        for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+          let s = 0, n = 0;
+          for (let k = -r; k <= r; k++) { const jj = Math.min(nz - 1, Math.max(0, j + k)); s += t[jj * nx + i]; n++; }
+          o[j * nx + i] = s / n;
+        }
+        return o;
+      }
+      const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+      // irregular lava-flow layers: boundaries from a seeded sequence of thicknesses
+      const LAYERS = [];
+      { let s = 7, y = 60; while (y < 2500) { s = (s * 16807) % 2147483647; LAYERS.push(y); y += STEP * (0.55 + 0.9 * (s / 2147483647)); } }
+      function terrace(v) {
+        let k = 0;
+        while (k < LAYERS.length - 2 && LAYERS[k + 1] <= v) k++;
+        const y0 = LAYERS[k], y1 = LAYERS[k + 1], f = (v - y0) / (y1 - y0);
+        return y0 + (y1 - y0) * sstep(A, 1, f);
+      }
+      function process(h, R) {
+        const nx = R.nx, nz = R.nz;
+        const b = blur(h, nx, nz, Math.max(1, Math.round(150 / R.dx)));
+        const lowSmooth = blur(h, nx, nz, Math.max(1, Math.round(60 / R.dx)));
+        const base = 40;
+        const e = new Float32Array(h.length);
+        for (let i = 0; i < h.length; i++) {
+          const hi = sstep(110, 260, h[i]);
+          let v = h[i] * hi + lowSmooth[i] * (1 - hi);
+          v += SHARP * (h[i] - b[i]) * hi;
+          e[i] = base + (v - base) * EX;
+        }
+        if (STEP > 0) {
+          for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+            const k = j * nx + i;
+            const gx = (e[j * nx + Math.min(nx - 1, i + 1)] - e[j * nx + Math.max(0, i - 1)]) / (2 * R.dx);
+            const gz = (e[Math.min(nz - 1, j + 1) * nx + i] - e[Math.max(0, j - 1) * nx + i]) / (2 * R.dx);
+            const w = sstep(0.12, 0.34, Math.hypot(gx, gz)) * sstep(90, 220, e[k]);
+            h[k] = e[k] + (terrace(e[k]) - e[k]) * w;
+          }
+        } else h.set(e);
+        return h;
+      }
+      const r = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), preserveDrawingBuffer: true });
+      r.setSize(1920, 1080, false);
+      const scene = new THREE.Scene();
+      const SKY = new THREE.Color(0x0c1830);
+      scene.background = SKY;
+      const cam = new THREE.PerspectiveCamera(55, 16 / 9, 5, 200000);
+      const moonDir = new THREE.Vector3(0.55, 0.22, 0.8).normalize();
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { uMoon: { value: moonDir }, uSky: { value: SKY } },
+        vertexShader: `varying vec3 vP; varying vec3 vN; void main(){ vP=(modelMatrix*vec4(position,1.)).xyz; vN=normal; gl_Position=projectionMatrix*viewMatrix*vec4(vP,1.); }`,
+        fragmentShader: `uniform vec3 uMoon; uniform vec3 uSky; varying vec3 vP; varying vec3 vN;
+          float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+          float n(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}
+          void main(){
+            vec3 N=normalize(vN); float slope=1.-N.y;
+            float band=fract(vP.y/23.+n(vP.xz*.004)*.6);
+            float rock=smoothstep(.12,.3,slope)*smoothstep(.25,.55,band+n(vP.xz*.05)*.3);
+            vec3 alb=mix(vec3(.82,.86,.92),vec3(.07,.07,.075),rock);
+            float d=max(dot(N,uMoon),0.);
+            vec3 c=alb*(vec3(.75,.8,.95)*d*1.3+vec3(.12,.16,.28)*(.6+.4*N.y));
+            float dist=length(vP-cameraPosition); float fog=1.-exp(-dist*.000045);
+            c=mix(c,uSky*1.4,fog);
+            gl_FragColor=vec4(pow(c,vec3(1./2.2)),1.);
+          }`,
+      });
+      function mesh(R, h, step, skip) {
+        const nx = Math.floor((R.nx - 1) / step) + 1, nz = Math.floor((R.nz - 1) / step) + 1;
+        const g = new THREE.BufferGeometry();
+        const pos = new Float32Array(nx * nz * 3);
+        for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+          const o = (j * nx + i) * 3;
+          pos[o] = R.x0 + i * step * R.dx; pos[o + 2] = R.z0 + j * step * R.dx; pos[o + 1] = h[j * step * R.nx + i * step];
+        }
+        const idx = [];
+        for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) {
+          const a = j * nx + i;
+          if (skip && skip(pos[a * 3], pos[a * 3 + 2])) continue;
+          idx.push(a, a + nx, a + 1, a + 1, a + nx, a + nx + 1);
+        }
+        g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        g.setIndex(idx);
+        g.computeVertexNormals();
+        return new THREE.Mesh(g, mat);
+      }
+      const near = meta.regions[Q.get("near") ?? "mid"], far = meta.regions.far;
+      const hn = process(await loadHeights(near), near), hf = process(await loadHeights(far), far);
+      const inside = (x, z) => x > near.x0 + 200 && x < near.x0 + near.dx * (near.nx - 1) - 300 && z > near.z0 + 200 && z < near.z0 + near.dx * (near.nz - 1) - 300;
+      scene.add(mesh(far, hf, 1, inside));
+      scene.add(mesh(near, hn, 1));
+      const mk = new THREE.Group();
+      for (let x = -10000; x <= 30000; x += 5000) for (let z = -15000; z <= 15000; z += 5000) {
+        const s = new THREE.Mesh(new THREE.CylinderGeometry(20, 20, 2400, 6), new THREE.MeshBasicMaterial({ color: x === 0 && z === 0 ? 0xff2222 : 0xffaa00 }));
+        s.position.set(x, 1200, z); mk.add(s);
+      }
+      scene.add(mk);
+      window.heightAt = (x, z) => {
+        const i = Math.round((x - near.x0) / near.dx), j = Math.round((z - near.z0) / near.dx);
+        return hn[j * near.nx + i];
+      };
+      window.view = (v) => {
+        mk.visible = !!v.markers;
+        cam.fov = v.fov ?? 55;
+        cam.position.set(v.x, v.y, v.z);
+        const yaw = (v.yaw * Math.PI) / 180, pitch = ((v.pitch ?? 0) * Math.PI) / 180;
+        // yaw 0 = looking north (-z), 90 = east (+x)
+        const d = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+        cam.lookAt(cam.position.clone().add(d));
+        cam.updateProjectionMatrix();
+        r.render(scene, cam);
+        return "ground " + window.heightAt(v.x, v.z)?.toFixed(0);
+      };
+      document.title = "ready";
+    </script>
+  </body>
+</html>

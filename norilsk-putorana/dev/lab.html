@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>lab</title>
+    <script type="importmap">{ "imports": { "three": "../assets/vendor/three/build/three.module.js" } }</script>
+    <style>html,body{margin:0;background:#000;width:1920px;height:1080px;overflow:hidden} #gl{position:absolute;inset:0;width:1920px;height:1080px}</style>
+  </head>
+  <body>
+    <div id="root" style="position:relative;width:1920px;height:1080px;overflow:hidden">
+      <canvas id="gl" width="1920" height="1080"></canvas>
+    </div>
+    <script type="module">
+      // Dev-only stills: lab.html?q=1 then __lab.look([x,y,z],[tx,ty,tz],{fov,t,q}) or __np.renderAt(t)
+      try {
+        const base = new URL("../", location.href).href;
+        // assets are referenced root-relative (assets/...), as in the composition
+        document.head.insertAdjacentHTML("afterbegin", `<base href="${base}">`);
+        await import(base + "src/main.js");
+        const np = window.__np;
+        window.__lab = {
+          look(p, t, o = {}) {
+            const pose = np.poseLookAt(new np.THREE.Vector3(...p), new np.THREE.Vector3(...t), o.fov ?? 55, o.roll ?? 0);
+            pose.near = o.near ?? 1;
+            const t0 = performance.now();
+            np.renderAt(o.t ?? 5, { pose, q: o.q ?? 1, exposure: o.exposure });
+            return { ms: Math.round(performance.now() - t0), ...np.terrain.stats() };
+          },
+        };
+        document.title = "ready";
+      } catch (e) {
+        document.title = "error: " + e.message;
+        console.error(e.stack);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+Subsets (only the glyphs the film uses) downloaded from Google Fonts. All under the SIL Open Font License 1.1:
+- Unbounded — NaN (unbounded.design), https://fonts.google.com/specimen/Unbounded
+- Noto Sans SC — Google / Adobe, https://fonts.google.com/noto/specimen/Noto+Sans+SC
+- IBM Plex Mono — IBM, https://fonts.google.com/specimen/IBM+Plex+Mono

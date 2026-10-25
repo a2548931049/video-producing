@@ -13,6 +13,12 @@ video-producing/
 │  ├─ index.html                ← 整个视频：HTML + GSAP 时间轴 + Canvas 的 draw(t)
 │  ├─ tools/make-music.mjs      ← 用代码合成的 120 BPM 配乐（没用任何采样）
 │  └─ snapshots/                ← 检查用的截帧和拼图
+├─ norilsk-putorana/            ← 10 秒一镜到底：诺里尔斯克 → 普托拉纳高原（HyperFrames + Three.js）
+│  ├─ BRIEF.md / STORYBOARD.md  ← 需求和分镜
+│  ├─ src/                      ← 地形、城市、天空/极光、镜头路径、后期
+│  ├─ assets/terrain/           ← 真实高程（tools/bake-terrain.mjs 从 AWS Terrain Tiles 烘焙）
+│  ├─ tools/make-audio.mjs      ← 用代码合成配乐和音效（生成 assets/score.wav）
+│  └─ snapshots/                ← 检查用的拼图
 └─ prompt-collections/          ← 两个开源 prompt 合集（不在仓库里，按需 clone）
 ```
 
@@ -100,7 +106,9 @@ npx hyperframes doctor           # 检查环境缺什么
 
 `npx hyperframes preview`（浏览器里的 Studio 时间轴编辑）需要在自己电脑上运行，云端容器里没法直接打开。
 
-重新生成配乐：`node tools/make-music.mjs`（showreel）或 `node tools/make-audio.mjs`（pelican-bicycle）。
+重新生成配乐：`node tools/make-music.mjs`（showreel）或 `node tools/make-audio.mjs`（pelican-bicycle、norilsk-putorana）。
+
+`norilsk-putorana` 渲染较重（软件 WebGL）：默认每帧 1 个子帧，方便 `check` 和草稿；成片加 `--variables '{"subframes":6}'`（运动模糊 + 抗锯齿），4 核容器里大约 40 分钟。
 
 ## 备注
 

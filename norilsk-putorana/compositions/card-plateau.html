@@ -1,0 +1,107 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "NP Display";
+      src: url("assets/fonts/unbounded-var.woff2") format("woff2");
+      font-weight: 200 900;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "NP Sans SC";
+      src: url("assets/fonts/notosanssc-var.woff2") format("woff2");
+      font-weight: 100 900;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "NP Mono";
+      src: url("assets/fonts/plexmono-500.woff2") format("woff2");
+      font-weight: 500;
+      font-display: block;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #plateau-scrim {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 1080px 600px at 15% 92%, rgba(3, 6, 14, 0.7) 0%, rgba(3, 6, 14, 0.4) 42%, rgba(3, 6, 14, 0) 72%);
+    }
+    #plateau-card {
+      position: absolute;
+      left: 200px;
+      bottom: 150px;
+      color: var(--color-ink, #f3ede4);
+      text-shadow: 0 2px 22px rgba(4, 8, 18, 0.6);
+    }
+    #plateau-coord {
+      font: 500 20px/1 "NP Mono", monospace;
+      letter-spacing: 0.22em;
+    }
+    #plateau-rule {
+      width: 132px;
+      height: 2px;
+      margin: 22px 0 26px;
+      background: var(--color-ink, #f3ede4);
+      transform-origin: 0 50%;
+    }
+    #plateau-title {
+      font: 500 82px/1 "NP Display", sans-serif;
+      letter-spacing: 0.24em;
+      white-space: nowrap;
+    }
+    #plateau-title span {
+      display: inline-block;
+    }
+    #plateau-sub {
+      margin-top: 28px;
+      font: 300 30px/1.2 "NP Sans SC", sans-serif;
+      letter-spacing: 0.3em;
+      white-space: nowrap;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="card-plateau"
+    data-width="1920"
+    data-height="1080"
+    data-composition-variables='[
+      {"id":"sub","type":"string","label":"Subtitle","default":"普托拉纳高原 · 2.5 亿年前的玄武岩台地"},
+      {"id":"coord","type":"string","label":"Coordinates","default":"69°21′ N · 90°01′ E"}
+    ]'
+  >
+    <div id="plateau-scrim"></div>
+    <div id="plateau-card">
+      <div id="plateau-coord" data-var-text="coord">69°21′ N · 90°01′ E</div>
+      <div id="plateau-rule"></div>
+      <div id="plateau-title" data-title="ПЛАТО ПУТОРАНА"></div>
+      <div id="plateau-sub" data-var-text="sub">普托拉纳高原 · 2.5 亿年前的玄武岩台地</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      // split the title into letters for the staggered reveal; built from data-title so a second run can't duplicate them
+      const title = document.getElementById("plateau-title");
+      if (!title.dataset.split) {
+        title.dataset.split = "1";
+        for (const ch of title.dataset.title) {
+          const s = document.createElement("span");
+          s.textContent = ch === " " ? "\u00a0" : ch;
+          title.appendChild(s);
+        }
+      }
+      // local time: 0 = 8.45 s in the film, right after the ridge drops away; fades with the picture at the end
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#plateau-scrim", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 0);
+      tl.fromTo("#plateau-coord", { opacity: 0, x: -14 }, { opacity: 0.85, x: 0, duration: 0.5, ease: "power3.out" }, 0.05);
+      tl.fromTo("#plateau-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power3.inOut" }, 0.1);
+      tl.fromTo("#plateau-title span", { opacity: 0, y: 26, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "power3.out", stagger: 0.035 }, 0.15);
+      tl.fromTo("#plateau-sub", { opacity: 0, y: 10 }, { opacity: 0.92, y: 0, duration: 0.5, ease: "power2.out" }, 0.48);
+      tl.to("#plateau-card", { opacity: 0, duration: 0.22, ease: "power1.in" }, 1.33);
+      tl.to("#plateau-scrim", { opacity: 0, duration: 0.22, ease: "power1.in" }, 1.33);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["card-plateau"] = tl;
+    })();
+  </script>
+</template>

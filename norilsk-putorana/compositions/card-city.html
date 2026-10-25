@@ -1,0 +1,109 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "NP Display";
+      src: url("assets/fonts/unbounded-var.woff2") format("woff2");
+      font-weight: 200 900;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "NP Sans SC";
+      src: url("assets/fonts/notosanssc-var.woff2") format("woff2");
+      font-weight: 100 900;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "NP Mono";
+      src: url("assets/fonts/plexmono-500.woff2") format("woff2");
+      font-weight: 500;
+      font-display: block;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    /* a soft local shade under the type: the street behind it is bright and busy */
+    #city-scrim {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 980px 560px at 14% 92%, rgba(3, 6, 14, 0.72) 0%, rgba(3, 6, 14, 0.42) 42%, rgba(3, 6, 14, 0) 72%);
+    }
+    #city-card {
+      position: absolute;
+      left: 200px;
+      bottom: 150px;
+      color: var(--color-ink, #f3ede4);
+      text-shadow: 0 2px 22px rgba(4, 8, 18, 0.6);
+    }
+    #city-coord {
+      font: 500 20px/1 "NP Mono", monospace;
+      letter-spacing: 0.22em;
+    }
+    #city-rule {
+      width: 132px;
+      height: 2px;
+      margin: 22px 0 26px;
+      background: var(--color-ink, #f3ede4);
+      transform-origin: 0 50%;
+    }
+    #city-title {
+      font: 500 82px/1 "NP Display", sans-serif;
+      letter-spacing: 0.24em;
+      white-space: nowrap;
+    }
+    #city-title span {
+      display: inline-block;
+    }
+    #city-sub {
+      margin-top: 28px;
+      font: 300 30px/1.2 "NP Sans SC", sans-serif;
+      letter-spacing: 0.3em;
+      white-space: nowrap;
+    }
+  </style>
+  <div
+    id="root"
+    data-composition-id="card-city"
+    data-width="1920"
+    data-height="1080"
+    data-composition-variables='[
+      {"id":"sub","type":"string","label":"Subtitle","default":"诺里尔斯克 · 北极圈以北约 300 公里"},
+      {"id":"coord","type":"string","label":"Coordinates","default":"69°20′ N · 88°13′ E"}
+    ]'
+  >
+    <div id="city-scrim"></div>
+    <div id="city-card">
+      <div id="city-coord" data-var-text="coord">69°20′ N · 88°13′ E</div>
+      <div id="city-rule"></div>
+      <div id="city-title" data-title="НОРИЛЬСК"></div>
+      <div id="city-sub" data-var-text="sub">诺里尔斯克 · 北极圈以北约 300 公里</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      // split the title into letters for the staggered reveal; built from data-title so a second run can't duplicate them
+      const title = document.getElementById("city-title");
+      if (!title.dataset.split) {
+        title.dataset.split = "1";
+        for (const ch of title.dataset.title) {
+          const s = document.createElement("span");
+          s.textContent = ch === " " ? "\u00a0" : ch;
+          title.appendChild(s);
+        }
+      }
+      // local time: 0 = 0.2 s in the film. In as the street rushes by, out as the camera dives into the archway.
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#city-scrim", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 0);
+      tl.fromTo("#city-coord", { opacity: 0, x: -14 }, { opacity: 0.85, x: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+      tl.fromTo("#city-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power3.inOut" }, 0.17);
+      tl.fromTo("#city-title span", { opacity: 0, y: 26, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out", stagger: 0.04 }, 0.22);
+      tl.fromTo("#city-sub", { opacity: 0, y: 10 }, { opacity: 0.92, y: 0, duration: 0.5, ease: "power2.out" }, 0.5);
+      tl.to(["#city-coord", "#city-rule", "#city-sub"], { opacity: 0, x: -24, filter: "blur(6px)", duration: 0.3, ease: "power2.in", stagger: 0.03 }, 1.5);
+      tl.to("#city-title span", { opacity: 0, x: -30, filter: "blur(8px)", duration: 0.3, ease: "power2.in", stagger: 0.015 }, 1.5);
+      tl.to("#city-scrim", { opacity: 0, duration: 0.4, ease: "power2.in" }, 1.56);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["card-city"] = tl;
+    })();
+  </script>
+</template>

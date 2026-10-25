@@ -1,0 +1,39 @@
+{
+  "source": "AWS Terrain Tiles (terrarium), https://registry.opendata.aws/terrain-tiles/",
+  "encoding": "h = (R*256 + G) / 20 - 100 metres",
+  "origin": {
+    "lon": 89.97,
+    "lat": 69.38
+  },
+  "mPerDegLon": 39318.641662094735,
+  "mPerDegLat": 111554.0331522381,
+  "regions": {
+    "near": {
+      "x0": -6000,
+      "z0": -3000,
+      "dx": 12.5,
+      "nx": 1040,
+      "nz": 960,
+      "zoom": 12,
+      "file": "assets/terrain/near.png"
+    },
+    "mid": {
+      "x0": -8000,
+      "z0": -10000,
+      "dx": 25,
+      "nx": 1280,
+      "nz": 1280,
+      "zoom": 12,
+      "file": "assets/terrain/mid.png"
+    },
+    "far": {
+      "x0": -40000,
+      "z0": -51200,
+      "dx": 100,
+      "nx": 1024,
+      "nz": 1024,
+      "zoom": 10,
+      "file": "assets/terrain/far.png"
+    }
+  }
+}
