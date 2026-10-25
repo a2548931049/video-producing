@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>鹈鹕骑自行车 · A Pelican Riding a Bicycle</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./assets/vendor/three/build/three.module.js",
+          "three/addons/": "./assets/vendor/three/addons/"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="src/overlay.css">
+    <style>
+      @font-face {
+        font-family: "Noto Serif SC";
+        src: url("assets/fonts/NotoSerifSC-400-subset.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "Noto Serif SC";
+        src: url("assets/fonts/NotoSerifSC-700-subset.woff2") format("woff2");
+        font-weight: 700;
+      }
+      @font-face {
+        font-family: "Noto Serif SC";
+        src: url("assets/fonts/NotoSerifSC-900-subset.woff2") format("woff2");
+        font-weight: 900;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #f4f0e7; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #f4f0e7; }
+      #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-rigq" id="root" data-composition-id="main" data-start="0" data-duration="40" data-width="1920" data-height="1080">
+      <!-- the whole film is one WebGL world rendered as a pure function of time (src/main.js) -->
+      <canvas data-hf-id="hf-iu2q" id="gl" width="1920" height="1080" data-layout-allow-overflow=""></canvas>
+      <!-- score + sound design, synthesised by tools/make-audio.mjs -->
+      <audio data-hf-id="hf-mlfs" id="score" src="assets/score.wav" data-start="0" data-duration="40" data-track-index="2" data-volume="1"></audio>
+    </div>
+    <script>
+      // One paused root timeline. A proxy tween forwards HyperFrames time to the WebGL frame;
+      // the module (src/main.js) registers its renderer once the scene is built.
+      window.__hf = window.__hf || {};
+      window.__hf.buildReady = window.__hf.buildReady || {};
+      const DURATION = 40;
+      const clock = { t: 0 };
+      let resolveWorld;
+      window.__hf.buildReady["pelican-world"] = new Promise((r) => (resolveWorld = r));
+      window.__pelicanBuilt = (renderFn) => {
+        window.__pelicanRender = renderFn;
+        renderFn(clock.t);
+        resolveWorld();
+      };
+      const tl = gsap.timeline({ paused: true });
+      tl.to(clock, { t: DURATION, duration: DURATION, ease: "none", onUpdate: () => window.__pelicanRender && window.__pelicanRender(clock.t) }, 0);
+      window.__timelines["main"] = tl;
+    </script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

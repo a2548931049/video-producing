@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0b0b10;
+      }
+      #root {
+        --ink: #0b0b10;
+        --paper: #f4f1ea;
+        --hot: #ff4d2e;
+        --blue: #2e5bff;
+        --acid: #e4ff3a;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: system-ui, sans-serif;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .mask {
+        overflow: hidden;
+        padding-bottom: 0.16em;
+      }
+      .mask > div {
+        display: block;
+      }
+
+      /* fx canvas + HUD sit above every scene */
+      #fx {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+      }
+      .hud {
+        position: absolute;
+        z-index: 10;
+        font-family: ui-monospace, monospace;
+        font-size: 22px;
+        letter-spacing: 0.12em;
+        color: #ffffff;
+        mix-blend-mode: difference;
+        white-space: nowrap;
+      }
+      #hud-tl { top: 44px; left: 56px; }
+      #hud-tr { top: 44px; right: 56px; }
+      #hud-bl { bottom: 44px; left: 56px; }
+      #hud-br { bottom: 44px; right: 56px; }
+      #hud-bar {
+        position: absolute;
+        z-index: 10;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 6px;
+        background: #ffffff;
+        mix-blend-mode: difference;
+        transform-origin: 0 50%;
+      }
+
+      /* 1 · ignition */
+      .dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        margin: -14px 0 0 -14px;
+        border-radius: 50%;
+        background: var(--hot);
+      }
+      .ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 40px;
+        height: 40px;
+        margin: -20px 0 0 -20px;
+        border-radius: 50%;
+        border: 2px solid var(--paper);
+      }
+      #s1-title {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(50% + 64px);
+        display: flex;
+        justify-content: center;
+        gap: 0.42em;
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+      #s1-title .ch {
+        display: inline-block;
+      }
+      #s1-sub {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(50% + 132px);
+        text-align: center;
+        font-family: ui-monospace, monospace;
+        font-size: 20px;
+        letter-spacing: 0.3em;
+        color: #9a978f;
+      }
+
+      /* 2 · kinetic words */
+      .word {
+        display: block;
+        font-size: 360px;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        line-height: 0.9;
+      }
+
+      /* 3 · grid */
+      #grid {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: repeat(16, 120px);
+        grid-template-rows: repeat(9, 120px);
+      }
+      .cell {
+        margin: 10px;
+        border-radius: 6px;
+        background: var(--blue);
+      }
+      .cell.acid {
+        background: var(--acid);
+      }
+      #s3-label {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 760px;
+        height: 120px;
+        margin: -60px 0 0 -380px;
+        background: var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #s3-label-inner {
+        font-family: ui-monospace, monospace;
+        font-size: 40px;
+        letter-spacing: 0.04em;
+        color: var(--paper);
+      }
+
+      /* 4 · generative */
+      #s4-flash {
+        position: absolute;
+        inset: 0;
+        background: var(--paper);
+      }
+      #s4-outline {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        margin-top: -150px;
+        font-size: 300px;
+        font-weight: 900;
+        line-height: 1;
+        white-space: nowrap;
+        color: var(--ink);
+        -webkit-text-stroke: 2px rgba(244, 241, 234, 0.16);
+      }
+      #s4-tag {
+        position: absolute;
+        left: 56px;
+        bottom: 110px;
+        font-family: ui-monospace, monospace;
+        font-size: 30px;
+        color: var(--acid);
+      }
+
+      /* 5 · equaliser + code */
+      #s5-code {
+        position: absolute;
+        left: 160px;
+        top: 230px;
+        font-family: ui-monospace, monospace;
+        font-size: 46px;
+        line-height: 1.5;
+      }
+      #s5-line-a {
+        color: var(--paper);
+        white-space: pre;
+      }
+      #s5-line-b {
+        color: var(--acid);
+        white-space: pre;
+      }
+      #s5-caret {
+        display: inline-block;
+        width: 24px;
+        height: 52px;
+        margin-left: 4px;
+        vertical-align: -8px;
+        background: var(--hot);
+      }
+
+      /* 6 · wipes + title */
+      #s6 {
+        background: var(--blue);
+      }
+      #s6-title {
+        display: flex;
+        font-size: 300px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        color: var(--paper);
+      }
+      #s6-title .m {
+        display: inline-block;
+        overflow: hidden;
+        padding-bottom: 0.06em;
+      }
+      #s6-title .ch {
+        display: inline-block;
+      }
+      #s6-title .sp {
+        width: 0.28em;
+      }
+      #s6-sub {
+        margin-top: 28px;
+        font-family: ui-monospace, monospace;
+        font-size: 34px;
+        letter-spacing: 0.18em;
+        color: var(--paper);
+      }
+      .bar {
+        position: absolute;
+        top: 0;
+        width: 25%;
+        height: 100%;
+      }
+      #s6-cover {
+        position: absolute;
+        inset: 0;
+        background: var(--ink);
+      }
+
+      /* 7 · end card */
+      #s7-inner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+      }
+      #s7-dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--hot);
+        margin-bottom: 18px;
+      }
+      #s7-l1-inner {
+        font-size: 84px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      #s7-l2-inner {
+        line-height: 1.45;
+        font-size: 46px;
+        font-weight: 500;
+        color: #c9c5bb;
+      }
+      #s7-l3 {
+        display: flex;
+        gap: 18px;
+        margin-top: 26px;
+        font-family: ui-monospace, monospace;
+        font-size: 28px;
+        color: #a9a59c;
+      }
+      #s7-l3 span {
+        display: inline-block;
+      }
+      #s7-l3 .arr {
+        color: var(--hot);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="15"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- 1 · ignition (0–2 s) -->
+      <div id="s1" class="scene clip" data-start="0" data-duration="2" data-track-index="1">
+        <div id="s1-ring" class="ring"></div>
+        <div id="s1-dot" class="dot"></div>
+        <div id="s1-title">
+          <span class="ch">S</span><span class="ch">H</span><span class="ch">O</span><span class="ch">W</span><span class="ch">R</span><span class="ch">E</span><span class="ch">E</span><span class="ch">L</span>
+        </div>
+        <div id="s1-sub">OPUS 5.5 · 15 SECONDS · 0 KEYFRAMES BY HAND</div>
+      </div>
+
+      <!-- 2 · kinetic words, one per beat (2–4 s) -->
+      <div id="s2-every" class="scene clip center" data-start="2" data-duration="0.5" data-track-index="2" style="background: var(--paper)">
+        <div id="w1" class="word" style="color: var(--ink)">EVERY</div>
+      </div>
+      <div id="s2-frame" class="scene clip center" data-start="2.5" data-duration="0.5" data-track-index="2" style="background: var(--hot)">
+        <div id="w2" class="word" style="color: var(--ink)">FRAME</div>
+      </div>
+      <div id="s2-is" class="scene clip center" data-start="3" data-duration="0.5" data-track-index="2" style="background: var(--blue)">
+        <div id="w3" class="word" style="color: var(--paper)">IS</div>
+      </div>
+      <div id="s2-code" class="scene clip center" data-start="3.5" data-duration="0.5" data-track-index="2" style="background: var(--acid)">
+        <div id="w4" class="word" style="color: var(--ink)">CODE.</div>
+      </div>
+
+      <!-- 3 · grid wave (4–6 s) -->
+      <div id="s3" class="scene clip" data-start="4" data-duration="2" data-track-index="1">
+        <div id="grid"></div>
+        <div id="s3-label" class="mask"><div id="s3-label-inner">1 function → 450 frames</div></div>
+      </div>
+
+      <!-- 4 · generative drop (6–8 s); the harmonograph itself is drawn on #fx -->
+      <div id="s4" class="scene clip" data-start="6" data-duration="2" data-track-index="1">
+        <div id="s4-outline">GENERATIVE · GENERATIVE</div>
+        <div id="s4-flash"></div>
+        <div id="s4-tag" class="mask"><div id="s4-tag-inner">harmonograph( t )</div></div>
+      </div>
+
+      <!-- 5 · code + equaliser (8–10 s); bars are drawn on #fx -->
+      <div id="s5" class="scene clip" data-start="8" data-duration="2" data-track-index="1">
+        <div id="s5-code">
+          <div><span id="s5-line-a"></span><span id="s5-caret"></span></div>
+          <div id="s5-line-b"></div>
+        </div>
+      </div>
+
+      <!-- 6 · wipes + title (10–12 s) -->
+      <div id="s6" class="scene clip center" data-start="10" data-duration="2" data-track-index="1">
+        <div id="s6-title">
+          <span class="m"><span class="ch">O</span></span><span class="m"><span class="ch">P</span></span><span class="m"><span class="ch">U</span></span><span class="m"><span class="ch">S</span></span><span class="m sp"></span><span class="m"><span class="ch">5</span></span><span class="m"><span class="ch">.</span></span><span class="m"><span class="ch">5</span></span>
+        </div>
+        <div id="s6-sub" class="mask"><div id="s6-sub-inner">CLAUDE · MOTION WRITTEN IN CODE</div></div>
+        <div id="b1" class="bar" style="left: 0; background: var(--acid)"></div>
+        <div id="b2" class="bar" style="left: 25%; background: var(--hot)"></div>
+        <div id="b3" class="bar" style="left: 50%; background: var(--paper)"></div>
+        <div id="b4" class="bar" style="left: 75%; background: var(--ink)"></div>
+        <div id="s6-cover"></div>
+      </div>
+
+      <!-- 7 · end card (12–15 s) -->
+      <div id="s7" class="scene clip" data-start="12" data-duration="3" data-track-index="1">
+        <div id="s7-inner">
+          <div id="s7-dot"></div>
+          <div class="mask"><div id="s7-l1-inner">Made with Claude Opus 5.5</div></div>
+          <div class="mask"><div id="s7-l2-inner">每一帧，都是代码。</div></div>
+          <div id="s7-l3"><span>HTML</span><span class="arr">→</span><span>seek(t)</span><span class="arr">→</span><span>Chrome</span><span class="arr">→</span><span>FFmpeg</span></div>
+        </div>
+      </div>
+
+      <canvas id="fx" width="1920" height="1080"></canvas>
+      <div id="hud-tl" class="hud">OPUS 5.5 / SHOWREEL</div>
+      <div id="hud-tr" class="hud">120 BPM · 30 FPS</div>
+      <div id="hud-bl" class="hud">F 000 / 450</div>
+      <div id="hud-br" class="hud">00:00.00</div>
+      <div id="hud-bar"></div>
+
+      <audio id="music" src="assets/music.wav" data-start="0" data-duration="15" data-track-index="9" data-volume="1"></audio>
+    </div>
+    <script>
+      const W = 1920, H = 1080, FPS = 30, TOTAL = 15;
+      const HOT = "#ff4d2e", BLUE = "#2e5bff", ACID = "#e4ff3a", PAPER = "#f4f1ea";
+
+      // Seeded PRNG: same seed, same sparks, every render.
+      function mulberry32(a) {
+        return function () {
+          a |= 0;
+          a = (a + 0x6d2b79f5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+      const rnd = mulberry32(7);
+      const PALETTE = [HOT, BLUE, ACID, PAPER];
+      const sparks = Array.from({ length: 260 }, () => ({
+        a: rnd() * Math.PI * 2,
+        v: 500 + rnd() * 1600,
+        k: 1.6 + rnd() * 2.4,
+        r: 1.5 + rnd() * 5,
+        c: PALETTE[(rnd() * 4) | 0],
+        life: 0.7 + rnd() * 0.9,
+      }));
+
+      const grid = document.getElementById("grid");
+      for (let r = 0; r < 9; r++)
+        for (let c = 0; c < 16; c++) {
+          const cell = document.createElement("div");
+          cell.className = ((r * 16 + c) * 7) % 11 === 0 ? "cell acid" : "cell";
+          grid.appendChild(cell);
+        }
+
+      const clamp01 = (x) => Math.max(0, Math.min(1, x));
+      const easeOut3 = (x) => 1 - Math.pow(1 - clamp01(x), 3);
+      // Mirrors the kick pattern in tools/make-music.mjs.
+      function kickEnv(t) {
+        if (t < 2 || t >= 12 || (t >= 5.5 && t < 6)) return 0;
+        return Math.exp(-(t % 0.5) * 9);
+      }
+
+      const cv = document.getElementById("fx");
+      const ctx = cv.getContext("2d");
+      const hud = {
+        tl: document.getElementById("hud-tl"),
+        tr: document.getElementById("hud-tr"),
+        bl: document.getElementById("hud-bl"),
+        br: document.getElementById("hud-br"),
+        bar: document.getElementById("hud-bar"),
+      };
+      const lineA = document.getElementById("s5-line-a");
+      const lineB = document.getElementById("s5-line-b");
+      const caret = document.getElementById("s5-caret");
+      const CODE_A = "for (let f = 0; f < 450; f++) seek(f / 30);";
+
+      function drawSparks(t) {
+        const u = t - 1.5;
+        if (u < 0 || u > 1.7) return;
+        ctx.lineCap = "round";
+        for (const s of sparks) {
+          if (u > s.life) continue;
+          const pos = (q) => (s.v * (1 - Math.exp(-s.k * Math.max(0, q)))) / s.k;
+          const d1 = pos(u), d0 = pos(u - 0.035);
+          const ca = Math.cos(s.a), sa = Math.sin(s.a);
+          ctx.globalAlpha = 1 - u / s.life;
+          ctx.strokeStyle = s.c;
+          ctx.lineWidth = s.r * (1 - 0.5 * (u / s.life));
+          ctx.beginPath();
+          ctx.moveTo(W / 2 + ca * d0, H / 2 + sa * d0);
+          ctx.lineTo(W / 2 + ca * d1 + 0.01, H / 2 + sa * d1);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      const CURVES = [
+        { c: HOT, f: [2.01, 3.0, 3.0, 2.0], p: [0, 1.57, 0.78, 0], rot: 0 },
+        { c: BLUE, f: [3.0, 2.0, 2.0, 3.01], p: [0.4, 0, 1.2, 0.3], rot: 2.09 },
+        { c: ACID, f: [2.0, 5.0, 3.0, 1.0], p: [1.0, 0.5, 0, 1.4], rot: 4.19 },
+      ];
+      function drawHarmonograph(t) {
+        const u = t - 6;
+        if (u < 0 || u > 2) return;
+        const prog = easeOut3(u / 1.6);
+        const tauMax = 6 + prog * 74;
+        const fade = 1 - clamp01((u - 1.7) / 0.3);
+        ctx.globalCompositeOperation = "lighter";
+        ctx.lineWidth = 2.4;
+        for (const cu of CURVES) {
+          const rot = cu.rot + u * 0.35;
+          const cr = Math.cos(rot), sr = Math.sin(rot);
+          ctx.strokeStyle = cu.c;
+          ctx.globalAlpha = 0.85 * fade;
+          ctx.beginPath();
+          let hx = 0, hy = 0;
+          for (let i = 0; i <= 1400; i++) {
+            const tau = (i / 1400) * tauMax;
+            const damp = Math.exp(-0.018 * tau);
+            const x = 210 * damp * (Math.sin(cu.f[0] * tau + cu.p[0]) + Math.sin(cu.f[1] * tau + cu.p[1]));
+            const y = 210 * damp * (Math.sin(cu.f[2] * tau + cu.p[2]) + Math.sin(cu.f[3] * tau + cu.p[3]));
+            hx = W / 2 + x * cr - y * sr;
+            hy = H / 2 + x * sr + y * cr;
+            if (i === 0) ctx.moveTo(hx, hy);
+            else ctx.lineTo(hx, hy);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = fade;
+          ctx.fillStyle = cu.c;
+          ctx.beginPath();
+          ctx.arc(hx, hy, 9 + 10 * kickEnv(t), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+      }
+
+      function drawEqualiser(t) {
+        const u = t - 8;
+        if (u < 0 || u > 2) return;
+        const grow = easeOut3(u / 0.35) * (1 - easeOut3((u - 1.75) / 0.25));
+        const n = 56, bw = 20, gap = 12;
+        const x0 = (W - (n * (bw + gap) - gap)) / 2, base = 880;
+        const k = kickEnv(t);
+        for (let i = 0; i < n; i++) {
+          const wob = 0.5 + 0.5 * Math.sin(i * 0.55 + t * 7 + Math.sin(i * 1.7) * 2);
+          const prof = Math.sin((Math.PI * (i + 0.5)) / n);
+          const h = grow * (24 + prof * (90 + 300 * k * wob + 90 * wob));
+          const x = x0 + i * (bw + gap);
+          ctx.fillStyle = h > 260 ? ACID : i % 2 ? PAPER : HOT;
+          ctx.fillRect(x, base - h, bw, h);
+          ctx.globalAlpha = 0.14;
+          ctx.fillRect(x, base + 10, bw, h * 0.35);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      function drawDom(t) {
+        const f = Math.min(450, Math.round(t * FPS));
+        hud.bl.textContent = "F " + String(f).padStart(3, "0") + " / 450";
+        const sec = Math.floor(t), cs = Math.floor((t - sec) * 100);
+        hud.br.textContent = "00:" + String(sec).padStart(2, "0") + "." + String(cs).padStart(2, "0");
+        const hudAlpha = clamp01((t - 1.5) / 0.3) * (1 - clamp01((t - 14.3) / 0.5));
+        for (const key of ["tl", "tr", "bl", "br", "bar"]) hud[key].style.opacity = hudAlpha;
+        hud.bar.style.transform = "scaleX(" + (t / TOTAL).toFixed(4) + ")";
+
+        const typed = Math.round(clamp01((t - 8.05) / 0.6) * CODE_A.length);
+        lineA.textContent = CODE_A.slice(0, typed);
+        caret.style.opacity = typed < CODE_A.length || Math.floor(t * 4) % 2 === 0 ? 1 : 0;
+        lineB.textContent = t >= 8.75 ? "// t = " + t.toFixed(3) + "s  →  frame " + String(f).padStart(3, "0") : "";
+      }
+
+      // draw(t): the whole procedural layer is a pure function of time.
+      function draw(t) {
+        // Hide the canvas outside its scenes so it never sits over DOM text.
+        cv.style.display = (t >= 1.5 && t < 3.2) || (t >= 6 && t < 10) ? "block" : "none";
+        ctx.clearRect(0, 0, W, H);
+        drawSparks(t);
+        drawHarmonograph(t);
+        drawEqualiser(t);
+        drawDom(t);
+      }
+
+      const tl = gsap.timeline({ paused: true });
+      const clock = { t: 0 };
+      tl.to(clock, { t: TOTAL, duration: TOTAL, ease: "none", onUpdate: () => draw(clock.t) }, 0);
+
+      // 1 · ignition
+      tl.fromTo("#s1-dot", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(3)" }, 0.08);
+      tl.to("#s1-dot", { scale: 1.9, duration: 0.08, ease: "power2.out", yoyo: true, repeat: 1 }, 0.5);
+      tl.to("#s1-dot", { scale: 2.4, duration: 0.08, ease: "power2.out", yoyo: true, repeat: 1 }, 1.0);
+      tl.to("#s1-dot", { scale: 0.5, duration: 0.2, ease: "power2.in" }, 1.28);
+      tl.to("#s1-dot", { scale: 0, duration: 0.06, ease: "none" }, 1.5);
+      tl.fromTo("#s1-ring", { scale: 0, opacity: 1 }, { scale: 32, opacity: 0, duration: 0.55, ease: "expo.out" }, 1.5);
+      tl.fromTo("#s1-title .ch", { yPercent: 120, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5, ease: "expo.out", stagger: 0.04 }, 0.55);
+      tl.to("#s1-title .ch", { yPercent: -260, opacity: 0, duration: 0.3, ease: "power3.in", stagger: { each: 0.02, from: "center" } }, 1.3);
+      tl.fromTo("#s1-sub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 0.9);
+      tl.to("#s1-sub", { opacity: 0, duration: 0.15, ease: "none" }, 1.35);
+
+      // 2 · one word per beat
+      [["#w1", 2], ["#w2", 2.5], ["#w3", 3], ["#w4", 3.5]].forEach(([id, at]) => {
+        tl.fromTo(id, { scale: 1.35, skewX: -14, yPercent: 18, opacity: 0.35 }, { scale: 1, skewX: 0, yPercent: 0, opacity: 1, duration: 0.22, ease: "expo.out" }, at);
+        tl.to(id, { scale: 0.94, duration: 0.28, ease: "none" }, at + 0.22);
+      });
+
+      // 3 · grid wave
+      const cells = gsap.utils.toArray("#grid .cell");
+      tl.fromTo(cells, { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.6, ease: "expo.out", stagger: { grid: [9, 16], from: "center", amount: 0.6 } }, 4.0);
+      tl.to(cells, { backgroundColor: HOT, borderRadius: "50%", scale: 0.55, duration: 0.3, ease: "power2.inOut", stagger: { grid: [9, 16], from: "start", amount: 0.4 } }, 4.75);
+      tl.to(cells, { scale: 0, duration: 0.22, ease: "power3.in", stagger: { grid: [9, 16], from: "edges", amount: 0.2 } }, 5.55);
+      tl.fromTo("#s3-label", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "expo.out" }, 4.45);
+      tl.fromTo("#s3-label-inner", { yPercent: 110 }, { yPercent: 0, duration: 0.4, ease: "expo.out" }, 4.6);
+      tl.to("#s3-label", { scaleY: 0, duration: 0.2, ease: "power3.in" }, 5.5);
+
+      // 4 · drop
+      tl.fromTo("#s4-flash", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power3.out" }, 6.0);
+      tl.fromTo("#s4-outline", { x: 200 }, { x: -900, duration: 2, ease: "none" }, 6.0);
+      tl.fromTo("#s4-tag-inner", { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: "expo.out" }, 6.25);
+
+      // 5 · code
+      tl.fromTo("#s5-code", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 8.0);
+      tl.to("#s5-code", { opacity: 0, duration: 0.2, ease: "none" }, 9.78);
+
+      // 6 · wipes + title
+      tl.fromTo(".bar", { yPercent: -100 }, { yPercent: 0, duration: 0.35, ease: "expo.out", stagger: 0.06 }, 10.0);
+      tl.to(".bar", { yPercent: 100, duration: 0.4, ease: "expo.in", stagger: 0.06 }, 10.38);
+      tl.fromTo("#s6-title .ch", { yPercent: 110 }, { yPercent: 0, duration: 0.6, ease: "expo.out", stagger: 0.04 }, 10.55);
+      tl.fromTo("#s6-sub-inner", { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: "expo.out" }, 11.0);
+      tl.fromTo("#s6-cover", { xPercent: -100 }, { xPercent: 0, duration: 0.4, ease: "expo.in" }, 11.6);
+
+      // 7 · end card
+      tl.fromTo("#s7-dot", { scale: 0 }, { scale: 1, duration: 0.4, ease: "back.out(3)" }, 12.05);
+      tl.fromTo("#s7-l1-inner", { yPercent: 110 }, { yPercent: 0, duration: 0.7, ease: "expo.out" }, 12.15);
+      tl.fromTo("#s7-l2-inner", { yPercent: 110 }, { yPercent: 0, duration: 0.7, ease: "expo.out" }, 12.4);
+      tl.fromTo("#s7-l3 span", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out", stagger: 0.08 }, 12.75);
+      tl.fromTo("#s7-inner", { scale: 1 }, { scale: 1.04, duration: 3, ease: "none" }, 12.0);
+      tl.to("#s7-inner", { opacity: 0, duration: 0.55, ease: "power1.in" }, 14.35);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+      draw(0);
+    </script>
+  </body>
+</html>

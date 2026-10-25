@@ -1,0 +1,119 @@
+/* Overlay layer: ink on paper for the drawing sections, the same ink for the end title. */
+#ov {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #20223a;
+  font-family: "Noto Serif SC", serif;
+}
+#doodle,
+#leaders {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: visible;
+}
+.mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+.cap {
+  position: absolute;
+  left: 150px;
+  top: 128px;
+  font-size: 46px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  white-space: nowrap;
+}
+.cap-strong {
+  top: 204px;
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+.callout {
+  position: absolute;
+  font-size: 26px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 5px 14px 7px;
+  border: 2.5px solid #20223a;
+  background: rgba(246, 242, 233, 0.92);
+  opacity: 0;
+}
+#titleblock {
+  position: absolute;
+  right: 96px;
+  top: 84px;
+  border: 3px solid #20223a;
+  background: rgba(246, 242, 233, 0.75);
+  font-size: 24px;
+  opacity: 0;
+}
+.tb-row {
+  display: flex;
+  border-bottom: 2px solid #20223a;
+}
+.tb-row:last-child {
+  border-bottom: none;
+}
+.tb-k {
+  width: 86px;
+  padding: 7px 0 7px 16px;
+  border-right: 2px solid #20223a;
+  font-weight: 700;
+}
+.tb-v {
+  min-width: 120px;
+  padding: 7px 16px;
+  border-right: 2px solid #20223a;
+}
+.tb-v.wide {
+  flex: 1;
+  border-right: none;
+}
+#title {
+  position: absolute;
+  left: 146px;
+  top: 700px;
+  font-size: 124px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+.tch {
+  display: inline-block;
+  opacity: 0;
+}
+#title-en {
+  position: absolute;
+  left: 154px;
+  top: 878px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  white-space: nowrap;
+  opacity: 0;
+}
+#title-tag {
+  position: absolute;
+  right: 150px;
+  top: 906px;
+  font-size: 40px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  opacity: 0;
+}
+#credit {
+  position: absolute;
+  left: 154px;
+  bottom: 52px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  opacity: 0;
+}

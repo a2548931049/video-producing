@@ -1,0 +1,21 @@
+# 视频和音频（音频能用 tools/*.mjs 重新生成）
+*.mp4
+*.mov
+*.webm
+*.wav
+*.mp3
+renders/
+
+# HyperFrames / Studio 的缓存
+.hyperframes/
+.thumbnails/
+.waveform-cache/
+*.log
+
+# 大尺寸截帧（保留 contact-sheet 拼图）
+pelican-bicycle/snapshots/frame-*.png
+
+# 第三方 prompt 合集（各自的仓库，见 README）
+prompt-collections/
+
+node_modules/

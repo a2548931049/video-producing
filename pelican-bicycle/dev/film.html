@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>film</title>
+    <script type="importmap">
+      { "imports": { "three": "../assets/vendor/three/build/three.module.js", "three/addons/": "../assets/vendor/three/addons/" } }
+    </script>
+    <link rel="stylesheet" href="../src/overlay.css" />
+    <style>@font-face {   font-family: "Noto Serif SC";   src: url("../assets/fonts/NotoSerifSC-400-subset.woff2") format("woff2");   font-weight: 400;   font-display: block; } @font-face {   font-family: "Noto Serif SC";   src: url("../assets/fonts/NotoSerifSC-700-subset.woff2") format("woff2");   font-weight: 700;   font-display: block; } @font-face {   font-family: "Noto Serif SC";   src: url("../assets/fonts/NotoSerifSC-900-subset.woff2") format("woff2");   font-weight: 900;   font-display: block; }  </style>
+    <style>html,body{margin:0;background:#111;width:1920px;height:1080px;overflow:hidden} #gl{position:absolute;inset:0;width:1920px;height:1080px}</style>
+  </head>
+  <body>
+    <div id="root" style="position:relative;width:1920px;height:1080px;overflow:hidden">
+      <canvas id="gl" width="1920" height="1080"></canvas>
+    </div>
+    <script type="module">
+      const t0 = performance.now();
+      await import("../src/main.js");
+      window.__buildMs = performance.now() - t0;
+      document.title = "ready";
+    </script>
+  </body>
+</html>
