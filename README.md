@@ -1,62 +1,56 @@
-# Opus 5.5 做视频 · 本地工作台
+# Opus 5.5 做视频 · 云端工作台
 
-所有东西都放在 `D:\opus-video`，和 Civ6 Mods 文件夹分开。
+这个仓库在 Claude Code 云端会话里使用：每次会话会把仓库克隆到一个临时 Linux 容器（`/home/user/video-producing`），会话结束后容器会被回收。**改动要提交并推送到 GitHub 才会保留**，渲染出的视频不进仓库，需要时重新渲染。
 
 ```
-D:\opus-video
-├─ pelican-bicycle\             ← 鹈鹕骑自行车（HyperFrames + Three.js）
+video-producing/
+├─ pelican-bicycle/             ← 鹈鹕骑自行车（HyperFrames + Three.js，3D 示例）
 │  ├─ BRIEF.md / STORYBOARD.md  ← 需求和分镜
-│  ├─ src\                      ← 场景、模型、镜头、后期
-│  ├─ tools\make-audio.mjs      ← 用代码合成配乐（生成 assets\score.wav）
-│  └─ snapshots\                ← 检查用的拼图
-├─ showreel\                    ← 样片项目（HyperFrames）
+│  ├─ src/                      ← 场景、模型、镜头、后期
+│  ├─ tools/make-audio.mjs      ← 用代码合成配乐（生成 assets/score.wav）
+│  └─ snapshots/                ← 检查用的拼图
+├─ showreel/                    ← 样片项目（HyperFrames，2D）
 │  ├─ index.html                ← 整个视频：HTML + GSAP 时间轴 + Canvas 的 draw(t)
-│  ├─ tools\make-music.mjs      ← 用代码合成的 120 BPM 配乐（没用任何采样）
-│  ├─ assets\music.wav          ← 上面脚本生成的音频
-│  ├─ renders\showreel.mp4      ← 成片
-│  └─ snapshots\                ← 检查用的截帧和拼图
-└─ prompt-collections\          ← 两个开源 prompt 合集（只拉了文字，没有视频）
-   ├─ awesome-opus5-5-videos\   ← 513 条，prompts\*.md，data\videos.json（MIT）
-   └─ awesome-ai-motion\        ← 1162 个案例，cases\*.md，中文 README（脚本是 MIT，作品版权归原作者）
+│  ├─ tools/make-music.mjs      ← 用代码合成的 120 BPM 配乐（没用任何采样）
+│  └─ snapshots/                ← 检查用的截帧和拼图
+└─ prompt-collections/          ← 两个开源 prompt 合集（不在仓库里，按需 clone）
 ```
 
-> 这个仓库不含视频、音频和 prompt 合集。音频用各项目 `tools\` 里的脚本重新生成，视频用 `npx hyperframes render` 重新渲染。prompt 合集自己 clone：
+> 仓库不含视频、音频和 prompt 合集。音频用各项目 `tools/` 里的脚本重新生成（会写到 `assets/` 下，如 `assets/score.wav`、`assets/music.wav`），视频用 `npx hyperframes render` 重新渲染，成片放 `renders/`（已被 `.gitignore` 忽略）。prompt 合集需要时再 clone：
 >
 > ```bash
 > git clone https://github.com/yihui-dev/awesome-opus5-5-videos prompt-collections/awesome-opus5-5-videos
 > git clone https://github.com/guanmo-ai/awesome-ai-motion prompt-collections/awesome-ai-motion
 > ```
 
-## 已经装好的东西
+新视频不一定要做 3D：用 HTML/CSS + GSAP + Canvas 的 2D 动效（像 `showreel`）渲染更快，也不依赖 WebGL。
 
-| 东西 | 位置 / 版本 |
+## 云端容器里的环境
+
+| 东西 | 状态 |
 |---|---|
-| FFmpeg | 9.0.2（winget） |
-| Node.js | 24.19（HyperFrames 要求 22+） |
-| HyperFrames Claude Code 插件 | `hyperframes@hyperframes` 0.8.141，用户级 |
-| HyperFrames 核心 skills | `~\.claude\skills\hyperframes*`、`media-use`（`init` 时自动装的） |
-| 渲染用浏览器 | 系统的 Chrome，GPU 是 GTX 1650（硬件加速） |
+| FFmpeg / FFprobe | 容器预装，6.1.1 |
+| Node.js | 容器预装，v22（HyperFrames 要求 22+） |
+| HyperFrames CLI | 不用安装，`npx hyperframes@0.8.141 …` 首次运行时自动下载 |
+| 渲染用浏览器 | 容器预装的 chrome-headless-shell，需设置 `HYPERFRAMES_BROWSER_PATH`（见下方备注） |
+| GPU | 没有。WebGL 走软件渲染（SwiftShader），3D 场景渲染会比较慢 |
+| 配音 / 转录 / AI 配乐 | 没装（可选：Kokoro TTS、whisper.cpp、MusicGen），需要时再装 |
 
-> Skills 要**新开一个 Claude Code 会话**才会加载。
+> 容器是临时的：会话里另外安装的东西、设置的环境变量，会话结束后都会消失。需要每次都有的，可以写进云环境设置里的启动脚本。
 
 ## 做一个新视频（最省事的方式）
 
-1. 在 `D:\opus-video` 里打开终端，新建项目：
-
-   ```bash
-   npx hyperframes init my-video
-   ```
-
-2. 在 Claude 桌面版里新建一个 Code 会话，工作目录选 `D:\opus-video\my-video`，把 effort 调到 **max**（默认的 medium 效果明显差）。
-3. 发一条这样的消息：
+1. 在 Claude Code 云端会话里选中这个仓库，把 effort 调到 **max**（默认的 medium 效果明显差）。
+2. 发一条这样的消息：
 
    ```text
-   /hyperframes 做一个 15 秒、1920×1080 的动效视频，主题是 ……，给 …… 看。
+   在仓库里用 npx hyperframes init 新建项目 my-video，
+   做一个 15 秒、1920×1080 的动效视频，主题是 ……，给 …… 看。
    风格：……（配色 / 字体 / 节奏）。音乐用代码合成，画面切换卡在节拍上。
-   先给我分镜和 4 个关键帧，我确认后再写，最后渲染成 MP4。
+   先给我分镜和 4 个关键帧，我确认后再写，最后渲染成 MP4 发给我。
    ```
 
-4. 它会自己写 `index.html`、跑 `check`、截帧检查，最后渲染。
+3. 它会自己写 `index.html`、跑 `check`、截帧检查，最后渲染。代码和分镜提交推送到 GitHub，MP4 直接发给你下载。
 
 ## 好用的 prompt 结构
 
@@ -72,7 +66,7 @@ D:\opus-video
 
 ## 合集里值得一看的 prompt
 
-去 `prompt-collections\awesome-opus5-5-videos\prompts\` 打开对应文件：
+去 `prompt-collections/awesome-opus5-5-videos/prompts/` 打开对应文件：
 
 | 文件 | 类型 | 看点 |
 |---|---|---|
@@ -85,25 +79,33 @@ D:\opus-video
 | `michaelzsguo-782312.md` | 3D / Shader | 2 分钟沙画讲 250 年美国历史，带配乐 |
 | `dannnnnok-716687.md` | 3D | “要给 1 万人看”式的激将法 prompt |
 
-按类别看：`awesome-opus5-5-videos` 里有 motion 317、explainer 67、interactive 70、3d 59 条。`awesome-ai-motion` 的 `browse\` 目录按产品宣传、讲解、角色动画、音乐 MV 等分好了类。
+按类别看：`awesome-opus5-5-videos` 里有 motion 317、explainer 67、interactive 70、3d 59 条。`awesome-ai-motion` 的 `browse/` 目录按产品宣传、讲解、角色动画、音乐 MV 等分好了类。
 
 ## 常用命令（在项目目录里运行）
 
+先设置渲染用的浏览器（每个新会话都要设一次）：
+
 ```bash
-npx hyperframes preview          # 浏览器里预览 + 时间轴编辑（Studio）
+export HYPERFRAMES_BROWSER_PATH=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+```
+
+```bash
 npx hyperframes check            # 检查：lint + 运行时 + 版式 + 对比度
-npx hyperframes snapshot --at 1,5,10   # 截指定时间点的帧
+npx hyperframes snapshot --at 1,5,10   # 截指定时间点的帧（注意：会覆盖 snapshots/ 里已有的截帧）
 npx hyperframes render --quality draft --output renders/draft.mp4      # 快速草稿
 npx hyperframes render --quality delivery --output renders/final.mp4   # 成片
 npx hyperframes catalog --query "reveal a headline one line at a time" # 找现成动效（用英文搜）
+npx hyperframes doctor           # 检查环境缺什么
 ```
 
-重新生成样片的配乐：`node tools\make-music.mjs`
+`npx hyperframes preview`（浏览器里的 Studio 时间轴编辑）需要在自己电脑上运行，云端容器里没法直接打开。
+
+重新生成配乐：`node tools/make-music.mjs`（showreel）或 `node tools/make-audio.mjs`（pelican-bicycle）。
 
 ## 备注
 
-- **渲染卡在 “Checking browser”**：HyperFrames 默认会去 Google 下载固定版本的 chrome-headless-shell，国内网络下会一直卡住。已经设好用户环境变量 `HYPERFRAMES_BROWSER_PATH`，指向系统 Chrome（截图模式，450 帧大约 45 秒）。新开的终端会自动生效；不想要了可以在“系统属性 → 环境变量”里删掉。
-
+- **`HYPERFRAMES_BROWSER_PATH`**：HyperFrames 默认会去 Google 下载 chrome-headless-shell，云端容器里不需要，直接指向容器预装的那个（上面的命令）。不设的话 `doctor` 会报 Chrome 缺失、渲染失败。
+- **⚠️ GSAP 从 CDN 加载会失败**：两个项目的 `index.html` 都用 `<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/...">` 加载 GSAP，但云端环境的网络屏蔽了 `cdn.jsdelivr.net`，页面报 `gsap is not defined`，截帧只有背景。npm 源是通的，解决办法是从 npm 下载 GSAP 放到 `assets/vendor/`，改成引用本地文件（同时也符合"渲染时不联网"的要求）。新项目也建议这样做。
 - HyperFrames 默认会发送匿名使用统计，不想发可以运行 `npx hyperframes telemetry disable`。
 - 配音（TTS）和转录是可选功能，没装。需要时让 Claude 用 `/media-use` 帮你配，或者按 `npx hyperframes doctor` 的提示安装。
 - 合集里的 prompt 版权属于各自的原作者，自己玩随便用；要公开发布作品，最好注明出处。
