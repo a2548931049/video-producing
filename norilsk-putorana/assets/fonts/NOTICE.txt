@@ -1,0 +1,2 @@
+Noto Sans SC (Google) and PT Sans Narrow (ParaType) — SIL Open Font License 1.1 (https://openfontlicense.org).
+Subsets downloaded from Google Fonts with only the glyphs this film uses (Noto Sans SC) or Latin + Cyrillic (PT Sans Narrow).

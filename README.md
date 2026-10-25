@@ -13,6 +13,11 @@ video-producing/
 │  ├─ index.html                ← 整个视频：HTML + GSAP 时间轴 + Canvas 的 draw(t)
 │  ├─ tools/make-music.mjs      ← 用代码合成的 120 BPM 配乐（没用任何采样）
 │  └─ snapshots/                ← 检查用的截帧和拼图
+├─ norilsk-putorana/            ← 10 秒一镜到底：诺里尔斯克 → 普托拉纳高原（HyperFrames + Canvas，2.5D 剪纸）
+│  ├─ BRIEF.md / STORYBOARD.md / REVIEW.md
+│  ├─ src/                      ← 镜头轨道、2.5D 渲染器、城市、高原、片名、运动模糊合成
+│  ├─ tools/make-audio.mjs      ← 风声、嗡声、呼啸和铺底和弦（生成 assets/score.wav）
+│  └─ dev/shoot.cjs             ← 不经 HyperFrames 直接截任意时刻的帧、拼图
 └─ prompt-collections/          ← 两个开源 prompt 合集（不在仓库里，按需 clone）
 ```
 

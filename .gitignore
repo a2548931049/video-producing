@@ -14,6 +14,7 @@ renders/
 
 # 大尺寸截帧（保留 contact-sheet 拼图）
 pelican-bicycle/snapshots/frame-*.png
+norilsk-putorana/snapshots/frame-*.png
 
 # 第三方 prompt 合集（各自的仓库，见 README）
 prompt-collections/
